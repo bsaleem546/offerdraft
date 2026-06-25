@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useToast } from "../lib/toast";
+import { AuthShell } from "../components/AuthShell";
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Log in — OfferDraft" }] }),
@@ -34,7 +35,7 @@ function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12">
+    <AuthShell>
       <div className="w-full max-w-[440px]">
         <div className="text-center mb-6">
           <Link to="/" className="serif text-2xl text-[var(--color-accent)]">OfferDraft</Link>
@@ -69,6 +70,6 @@ function Login() {
           </div>
         </div>
       </div>
-    </div>
+    </AuthShell>
   );
 }

@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Mail } from "lucide-react";
 import { useEffect, useState } from "react";
+import { AuthShell } from "../components/AuthShell";
 
 export const Route = createFileRoute("/verify-email")({
   head: () => ({ meta: [{ title: "Verify email — OfferDraft" }] }),
@@ -16,8 +17,8 @@ function Verify() {
   }, [cd]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12 text-center">
-      <div className="max-w-md">
+    <AuthShell>
+      <div className="max-w-md text-center">
         <Mail size={56} strokeWidth={1.2} className="mx-auto text-[var(--color-accent)]" />
         <h1 className="serif text-3xl mt-6">Check your inbox</h1>
         <p className="mt-3 text-[var(--color-text-sec)]">
@@ -36,6 +37,6 @@ function Verify() {
           </Link>
         </div>
       </div>
-    </div>
+    </AuthShell>
   );
 }

@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, FileText, Check } from "lucide-react";
+import { ArrowRight, FileText, Check, Sun, Moon } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useTheme } from "../hooks/use-theme";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -16,6 +17,7 @@ export const Route = createFileRoute("/")({
 
 function Nav() {
   const [scrolled, setScrolled] = useState(false);
+  const { theme, toggle } = useTheme();
   useEffect(() => {
     const f = () => setScrolled(window.scrollY > 60);
     window.addEventListener("scroll", f);
@@ -24,13 +26,20 @@ function Nav() {
   return (
     <nav
       className={`sticky top-0 z-40 px-6 lg:px-12 py-4 flex items-center justify-between transition-all ${
-        scrolled ? "border-b border-[var(--color-border)] backdrop-blur bg-[rgba(10,10,10,0.85)]" : ""
+        scrolled ? "border-b border-[var(--color-border)] backdrop-blur bg-[rgba(30,30,30,0.88)]" : ""
       }`}
     >
       <Link to="/" className="serif text-2xl text-[var(--color-accent)]">OfferDraft</Link>
-      <div className="flex items-center gap-3">
-        <Link to="/login" className="btn-ghost !py-2 !px-4">Log in</Link>
-        <Link to="/register" className="btn-primary !py-2 !px-4">Get Started</Link>
+      <div className="flex items-center gap-2">
+        <Link to="/login" className="btn-ghost !py-2 !px-4 text-sm">Log in</Link>
+        <Link to="/register" className="btn-primary !py-2 !px-4 text-sm">Get Started</Link>
+        <button
+          onClick={toggle}
+          aria-label="Toggle theme"
+          className="ml-1 w-8 h-8 rounded-lg flex items-center justify-center text-[var(--color-text-sec)] hover:text-[var(--color-text-pri)] hover:bg-[var(--color-surface)] border border-[var(--color-border)] transition-colors"
+        >
+          {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
+        </button>
       </div>
     </nav>
   );

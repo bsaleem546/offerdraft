@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft, Check } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "../lib/toast";
+import { AuthShell } from "../components/AuthShell";
 
 export const Route = createFileRoute("/reset-password")({
   head: () => ({ meta: [{ title: "Set new password — OfferDraft" }] }),
@@ -31,7 +32,7 @@ function Reset() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12">
+    <AuthShell>
       <div className="w-full max-w-[400px]">
         <Link to="/login" className="text-sm text-[var(--color-text-sec)] hover:text-[var(--color-text-pri)] flex items-center gap-2 mb-6">
           <ArrowLeft size={14} /> Back to login
@@ -59,6 +60,6 @@ function Reset() {
           </form>
         </div>
       </div>
-    </div>
+    </AuthShell>
   );
 }

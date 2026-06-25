@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Mail } from "lucide-react";
 import { useEffect, useState } from "react";
+import { AuthShell } from "../components/AuthShell";
 
 export const Route = createFileRoute("/forgot-password")({
   head: () => ({ meta: [{ title: "Reset password — OfferDraft" }] }),
@@ -26,7 +27,7 @@ function Forgot() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12">
+    <AuthShell>
       <div className="w-full max-w-[400px]">
         <Link to="/login" className="text-sm text-[var(--color-text-sec)] hover:text-[var(--color-text-pri)] flex items-center gap-2 mb-6">
           <ArrowLeft size={14} /> Back to login
@@ -62,6 +63,6 @@ function Forgot() {
           )}
         </div>
       </div>
-    </div>
+    </AuthShell>
   );
 }

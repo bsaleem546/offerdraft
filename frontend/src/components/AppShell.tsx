@@ -6,8 +6,11 @@ import {
   Bookmark,
   User,
   CreditCard,
+  Sun,
+  Moon,
 } from "lucide-react";
 import type { ReactNode } from "react";
+import { useTheme } from "../hooks/use-theme";
 
 const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -20,6 +23,7 @@ const nav = [
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { theme, toggle } = useTheme();
 
   return (
     <div className="flex min-h-screen">
@@ -52,16 +56,23 @@ export function AppShell({ children }: { children: ReactNode }) {
             );
           })}
         </nav>
-        <div className="px-6 py-4 border-t border-[var(--color-border)] flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-[var(--color-accent-dim)] text-[var(--color-accent)] flex items-center justify-center text-sm font-semibold">
+        <div className="px-4 py-4 border-t border-[var(--color-border)] flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-[var(--color-accent-dim)] text-[var(--color-accent)] flex items-center justify-center text-xs font-semibold shrink-0">
             EM
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="text-sm truncate">Elena Marquez</div>
             <div className="text-xs text-[var(--color-text-sec)] truncate">
               elena@marquezrealty.com
             </div>
           </div>
+          <button
+            onClick={toggle}
+            aria-label="Toggle theme"
+            className="shrink-0 w-7 h-7 rounded-md flex items-center justify-center text-[var(--color-text-sec)] hover:text-[var(--color-text-pri)] hover:bg-[var(--color-surface)] transition-colors"
+          >
+            {theme === "dark" ? <Sun size={13} /> : <Moon size={13} />}
+          </button>
         </div>
       </aside>
       <main className="ml-[240px] flex-1 min-w-0">
