@@ -42,10 +42,15 @@ function parseValidatorErrors(raw: string): FieldErrors {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const token = getAccessToken();
   const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { "Content-Type": "application/json", ...init?.headers },
-    credentials: "include",
     ...init,
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...init?.headers,
+    },
   });
 
   const body: ApiResponse<T> = await res.json();
@@ -73,6 +78,44 @@ export function clearTokens() {
   localStorage.removeItem("refresh_token");
 }
 
+export interface Profile {
+  id: string;
+  name: string;
+  email: string;
+  agency_name: string;
+  logo_url: string;
+  brand_color: string;
+  pdf_footer_text: string;
+  license_number: string;
+  state: string;
+  email_verified: boolean;
+  plan: string;
+  plan_status: string;
+  created_at: string;
+}
+
+export const user = {
+  getProfile: () =>
+    request<Profile>("/api/v1/me"),
+
+  updateProfile: (body: { name?: string; agency_name?: string; license_number?: string; state?: string }) =>
+    request<Profile>("/api/v1/me", { method: "PUT", body: JSON.stringify(body) }),
+
+  updateBranding: (body: { brand_color?: string; pdf_footer_text?: string }) =>
+    request<Profile>("/api/v1/me/branding", { method: "PUT", body: JSON.stringify(body) }),
+
+  updateDefaults: (body: {
+    default_contingencies?: string[];
+    default_closing_days?: number;
+    cover_letter_tone?: string;
+    default_earnest_money_pct?: number;
+  }) =>
+    request<Profile>("/api/v1/me/defaults", { method: "PUT", body: JSON.stringify(body) }),
+
+  changePassword: (body: { current_password: string; new_password: string }) =>
+    request<string>("/api/v1/me/password", { method: "PUT", body: JSON.stringify(body) }),
+};
+
 export const auth = {
   register: async (name: string, email: string, password: string, plan?: string) => {
     const tokens = await request<{ access_token: string; refresh_token: string }>(
@@ -96,7 +139,5 @@ export const auth = {
     request<string>(`/api/v1/auth/verify-email?token=${encodeURIComponent(token)}`),
 
   me: () =>
-    request<{ user_id: string }>("/api/v1/me", {
-      headers: { Authorization: `Bearer ${getAccessToken()}` },
-    }),
+    request<{ user_id: string }>("/api/v1/me"),
 };

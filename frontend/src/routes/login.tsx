@@ -2,10 +2,12 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useToast } from "../lib/toast";
-import { auth, ApiError } from "../lib/api";
+import { auth, user, ApiError } from "../lib/api";
 import { AuthShell } from "../components/AuthShell";
+import { requireGuest } from "../lib/guards";
 
 export const Route = createFileRoute("/login")({
+  beforeLoad: requireGuest,
   head: () => ({ meta: [{ title: "Log in — OfferDraft" }] }),
   component: Login,
 });
@@ -25,9 +27,10 @@ function Login() {
     setLoading(true);
     auth
       .login(email, pw)
-      .then(() => {
+      .then(() => user.getProfile())
+      .then((profile) => {
         toast("success", "Welcome back");
-        navigate({ to: "/dashboard" });
+        navigate({ to: profile.agency_name ? "/dashboard" : "/onboarding" });
       })
       .catch((err: unknown) => {
         if (err instanceof ApiError && Object.keys(err.fields).length) {

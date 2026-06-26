@@ -4,8 +4,10 @@ import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { useToast } from "../lib/toast";
 import { auth, ApiError } from "../lib/api";
 import { AuthShell } from "../components/AuthShell";
+import { requireGuest } from "../lib/guards";
 
 export const Route = createFileRoute("/register")({
+  beforeLoad: requireGuest,
   head: () => ({ meta: [{ title: "Create account — OfferDraft" }] }),
   validateSearch: (s: Record<string, unknown>) => ({ plan: (s.plan as string) ?? undefined }),
   component: Register,
@@ -38,6 +40,7 @@ function Register() {
     auth
       .register(form.name, form.email, form.pw, plan)
       .then(() => {
+        localStorage.setItem("pending_verify_email", form.email);
         toast("success", "Account created — check your email to verify.");
         navigate({ to: "/verify-email" });
       })

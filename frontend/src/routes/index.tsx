@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, FileText, Check, Sun, Moon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTheme } from "../hooks/use-theme";
+import { getAccessToken } from "../lib/api";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -31,8 +32,14 @@ function Nav() {
     >
       <Link to="/" className="serif text-2xl text-[var(--color-accent)]">OfferDraft</Link>
       <div className="flex items-center gap-2">
-        <Link to="/login" className="btn-ghost !py-2 !px-4 text-sm">Log in</Link>
-        <Link to="/register" className="btn-primary !py-2 !px-4 text-sm">Get Started</Link>
+        {getAccessToken() ? (
+          <Link to="/dashboard" className="btn-primary !py-2 !px-4 text-sm">Dashboard</Link>
+        ) : (
+          <>
+            <Link to="/login" className="btn-ghost !py-2 !px-4 text-sm">Log in</Link>
+            <Link to="/register" className="btn-primary !py-2 !px-4 text-sm">Get Started</Link>
+          </>
+        )}
         <button
           onClick={toggle}
           aria-label="Toggle theme"

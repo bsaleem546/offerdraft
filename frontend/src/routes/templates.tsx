@@ -5,8 +5,10 @@ import { AppShell } from "../components/AppShell";
 import { Modal, ConfirmModal } from "../components/Modal";
 import { TEMPLATES } from "../lib/mock-data";
 import { useToast } from "../lib/toast";
+import { requireAuth } from "../lib/guards";
 
 export const Route = createFileRoute("/templates")({
+  beforeLoad: requireAuth,
   head: () => ({ meta: [{ title: "Templates — OfferDraft" }] }),
   component: Templates,
 });

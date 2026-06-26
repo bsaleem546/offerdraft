@@ -6,8 +6,10 @@ import { StatusBadge } from "../components/StatusBadge";
 import { ConfirmModal } from "../components/Modal";
 import { PACKAGES, SAMPLE_COVER_LETTER, formatMoney } from "../lib/mock-data";
 import { useToast } from "../lib/toast";
+import { requireAuth } from "../lib/guards";
 
 export const Route = createFileRoute("/packages/$id")({
+  beforeLoad: requireAuth,
   head: ({ params }) => ({ meta: [{ title: `Package ${params.id} — OfferDraft` }] }),
   loader: ({ params }) => {
     const pkg = PACKAGES.find((p) => p.id === params.id);

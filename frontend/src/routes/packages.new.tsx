@@ -5,8 +5,10 @@ import { AppShell } from "../components/AppShell";
 import { StepProgress } from "../components/StepProgress";
 import { SAMPLE_COVER_LETTER, formatMoney } from "../lib/mock-data";
 import { useToast } from "../lib/toast";
+import { requireAuth } from "../lib/guards";
 
 export const Route = createFileRoute("/packages/new")({
+  beforeLoad: requireAuth,
   head: () => ({ meta: [{ title: "New Package — OfferDraft" }] }),
   component: NewPackage,
 });

@@ -3,8 +3,10 @@ import { Plus, ArrowRight, Eye, Download, Trash2, CheckCircle } from "lucide-rea
 import { AppShell } from "../components/AppShell";
 import { StatusBadge } from "../components/StatusBadge";
 import { PACKAGES, formatMoney } from "../lib/mock-data";
+import { requireAuth } from "../lib/guards";
 
 export const Route = createFileRoute("/dashboard")({
+  beforeLoad: requireAuth,
   head: () => ({ meta: [{ title: "Dashboard — OfferDraft" }] }),
   component: Dashboard,
 });

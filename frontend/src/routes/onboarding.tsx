@@ -1,8 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { Upload, ArrowLeft, Check } from "lucide-react";
+import { Upload, ArrowLeft, Check, Loader2 } from "lucide-react";
 import { StepProgress } from "../components/StepProgress";
 import { useToast } from "../lib/toast";
+import { user } from "../lib/api";
 
 export const Route = createFileRoute("/onboarding")({
   head: () => ({ meta: [{ title: "Welcome — OfferDraft" }] }),
@@ -10,21 +11,57 @@ export const Route = createFileRoute("/onboarding")({
 });
 
 const STATES = ["AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA","KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ","NM","NY","NC","ND","OH","OK","OR","PA","RI","SC","SD","TN","TX","UT","VT","VA","WA","WV","WI","WY"];
+const CONTINGENCIES = ["Inspection", "Financing", "Appraisal", "Sale of Home"];
+const TONES = [
+  { label: "Professional", value: "professional" },
+  { label: "Warm & Personal", value: "warm" },
+  { label: "Highly Competitive", value: "competitive" },
+];
 
 function Onboarding() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
-  const [plan, setPlan] = useState<"solo" | "team" | null>("solo");
+  const [saving, setSaving] = useState(false);
   const [logo, setLogo] = useState<string | null>(null);
+  const [plan, setPlan] = useState<"solo" | "team">("solo");
+
+  const [agencyForm, setAgencyForm] = useState({ name: "", agency_name: "", state: "TX", license_number: "" });
+  const [defaults, setDefaults] = useState({
+    earnest_pct: 3,
+    closing_days: 30,
+    contingencies: ["Inspection", "Financing", "Appraisal"] as string[],
+    tone: "professional",
+  });
 
   const next = () => setStep((s) => s + 1);
   const back = () => setStep((s) => s - 1);
 
+  const toggleContingency = (c: string) =>
+    setDefaults((d) => ({
+      ...d,
+      contingencies: d.contingencies.includes(c)
+        ? d.contingencies.filter((x) => x !== c)
+        : [...d.contingencies, c],
+    }));
+
   const finish = () => {
-    console.log("onboarding complete", { plan });
-    toast("success", "Welcome to OfferDraft. Create your first offer package.");
-    navigate({ to: "/dashboard" });
+    setSaving(true);
+    Promise.all([
+      user.updateProfile({ name: agencyForm.name, agency_name: agencyForm.agency_name, state: agencyForm.state, license_number: agencyForm.license_number }),
+      user.updateDefaults({
+        default_contingencies: defaults.contingencies,
+        default_closing_days: defaults.closing_days,
+        cover_letter_tone: defaults.tone,
+        default_earnest_money_pct: defaults.earnest_pct,
+      }),
+    ])
+      .then(() => {
+        toast("success", "Welcome to OfferDraft. Create your first offer package.");
+        navigate({ to: "/dashboard" });
+      })
+      .catch(() => toast("error", "Failed to save your settings. You can update them in Account."))
+      .finally(() => setSaving(false));
   };
 
   return (
@@ -44,21 +81,21 @@ function Onboarding() {
             <div className="grid md:grid-cols-2 gap-5 mt-8">
               <div>
                 <label className="label-xs">Agency Name *</label>
-                <input className="input-base mt-2" defaultValue="Marquez Realty" />
+                <input className="input-base mt-2" value={agencyForm.agency_name} onChange={(e) => setAgencyForm({ ...agencyForm, agency_name: e.target.value })} />
               </div>
               <div>
                 <label className="label-xs">Your Full Name *</label>
-                <input className="input-base mt-2" defaultValue="Elena Marquez" />
+                <input className="input-base mt-2" value={agencyForm.name} onChange={(e) => setAgencyForm({ ...agencyForm, name: e.target.value })} />
               </div>
               <div>
                 <label className="label-xs">State</label>
-                <select className="input-base mt-2" defaultValue="TX">
+                <select className="input-base mt-2" value={agencyForm.state} onChange={(e) => setAgencyForm({ ...agencyForm, state: e.target.value })}>
                   {STATES.map((s) => <option key={s}>{s}</option>)}
                 </select>
               </div>
               <div>
                 <label className="label-xs">License Number</label>
-                <input className="input-base mt-2" placeholder="Optional" />
+                <input className="input-base mt-2" placeholder="Optional" value={agencyForm.license_number} onChange={(e) => setAgencyForm({ ...agencyForm, license_number: e.target.value })} />
               </div>
             </div>
             <div className="mt-6">
@@ -73,15 +110,7 @@ function Onboarding() {
                     <div className="text-xs text-[var(--color-text-sec)] mt-1">PNG or JPG, max 2MB</div>
                   </>
                 )}
-                <input
-                  type="file"
-                  accept="image/png,image/jpeg"
-                  className="hidden"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) setLogo(URL.createObjectURL(f));
-                  }}
-                />
+                <input type="file" accept="image/png,image/jpeg" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) setLogo(URL.createObjectURL(f)); }} />
               </label>
             </div>
             <div className="flex justify-end mt-8">
@@ -97,40 +126,37 @@ function Onboarding() {
             <div className="grid md:grid-cols-2 gap-5 mt-8">
               <div>
                 <label className="label-xs">Default Earnest Money %</label>
-                <input type="number" defaultValue={3} min={0} max={100} className="input-base mt-2" />
+                <input type="number" value={defaults.earnest_pct} min={0} max={100} onChange={(e) => setDefaults({ ...defaults, earnest_pct: Number(e.target.value) })} className="input-base mt-2" />
               </div>
               <div>
                 <label className="label-xs">Preferred Closing Window</label>
-                <select className="input-base mt-2" defaultValue="30">
-                  {["14","21","30","45","60","Custom"].map((d) => <option key={d}>{d === "Custom" ? "Custom" : `${d} days`}</option>)}
+                <select className="input-base mt-2" value={defaults.closing_days} onChange={(e) => setDefaults({ ...defaults, closing_days: Number(e.target.value) })}>
+                  {[14, 21, 30, 45, 60].map((d) => <option key={d} value={d}>{d} days</option>)}
                 </select>
               </div>
             </div>
-
             <div className="mt-6">
               <label className="label-xs">Default Contingencies</label>
               <div className="grid grid-cols-2 gap-2 mt-3">
-                {["Inspection","Financing","Appraisal","Sale of Home"].map((c) => (
+                {CONTINGENCIES.map((c) => (
                   <label key={c} className="flex items-center gap-2 px-3 py-2 border border-[var(--color-border)] rounded-md text-sm cursor-pointer hover:border-[var(--color-accent)]">
-                    <input type="checkbox" defaultChecked={c !== "Sale of Home"} className="accent-[var(--color-accent)]" />
+                    <input type="checkbox" checked={defaults.contingencies.includes(c)} onChange={() => toggleContingency(c)} className="accent-[var(--color-accent)]" />
                     {c} Contingency
                   </label>
                 ))}
               </div>
             </div>
-
             <div className="mt-6">
               <label className="label-xs">Cover Letter Tone</label>
               <div className="grid grid-cols-3 gap-2 mt-3">
-                {["Professional","Warm & Personal","Highly Competitive"].map((t, i) => (
-                  <label key={t} className="flex items-center gap-2 px-3 py-2 border border-[var(--color-border)] rounded-md text-sm cursor-pointer hover:border-[var(--color-accent)]">
-                    <input type="radio" name="tone" defaultChecked={i === 0} className="accent-[var(--color-accent)]" />
-                    {t}
+                {TONES.map((t) => (
+                  <label key={t.value} className="flex items-center gap-2 px-3 py-2 border border-[var(--color-border)] rounded-md text-sm cursor-pointer hover:border-[var(--color-accent)]">
+                    <input type="radio" name="tone" checked={defaults.tone === t.value} onChange={() => setDefaults({ ...defaults, tone: t.value })} className="accent-[var(--color-accent)]" />
+                    {t.label}
                   </label>
                 ))}
               </div>
             </div>
-
             <div className="flex justify-between mt-8">
               <button onClick={back} className="btn-ghost"><ArrowLeft size={14} /> Back</button>
               <button onClick={next} className="btn-primary">Continue →</button>
@@ -144,15 +170,10 @@ function Onboarding() {
             <p className="mt-2 text-[var(--color-text-sec)]">You won't be charged today. Trial lasts 14 days.</p>
             <div className="grid md:grid-cols-2 gap-4 mt-8">
               {[
-                { id: "solo", name: "Solo", price: "$49", bullets: ["1 agent", "30 packages/mo", "3 templates"] },
-                { id: "team", name: "Team", price: "$149", bullets: ["5 agents", "Unlimited packages", "White-label PDF"] },
+                { id: "solo" as const, name: "Solo", price: "$49", bullets: ["1 agent", "30 packages/mo", "3 templates"] },
+                { id: "team" as const, name: "Team", price: "$149", bullets: ["5 agents", "Unlimited packages", "White-label PDF"] },
               ].map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setPlan(p.id as "solo" | "team")}
-                  className="card p-6 text-left transition-colors"
-                  style={plan === p.id ? { borderColor: "var(--color-accent)", background: "var(--color-accent-dim)" } : {}}
-                >
+                <button key={p.id} onClick={() => setPlan(p.id)} className="card p-6 text-left transition-colors" style={plan === p.id ? { borderColor: "var(--color-accent)", background: "var(--color-accent-dim)" } : {}}>
                   <div className="flex items-center justify-between">
                     <div className="serif text-2xl">{p.name}</div>
                     {plan === p.id && <Check size={18} className="text-[var(--color-accent)]" />}
@@ -166,7 +187,9 @@ function Onboarding() {
             </div>
             <div className="flex justify-between mt-8">
               <button onClick={back} className="btn-ghost"><ArrowLeft size={14} /> Back</button>
-              <button onClick={finish} className="btn-primary">Start Free Trial</button>
+              <button onClick={finish} disabled={saving} className="btn-primary">
+                {saving ? <Loader2 size={14} className="animate-spin" /> : "Start Free Trial"}
+              </button>
             </div>
           </div>
         )}

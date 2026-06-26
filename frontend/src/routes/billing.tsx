@@ -5,8 +5,10 @@ import { AppShell } from "../components/AppShell";
 import { ConfirmModal } from "../components/Modal";
 import { INVOICES } from "../lib/mock-data";
 import { useToast } from "../lib/toast";
+import { requireAuth } from "../lib/guards";
 
 export const Route = createFileRoute("/billing")({
+  beforeLoad: requireAuth,
   head: () => ({ meta: [{ title: "Billing — OfferDraft" }] }),
   component: Billing,
 });

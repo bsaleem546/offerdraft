@@ -7,8 +7,8 @@ import (
 
 	"github.com/bsaleem546/offerdraft-api/db"
 	"github.com/bsaleem546/offerdraft-api/internal/auth"
+	"github.com/bsaleem546/offerdraft-api/internal/user"
 	"github.com/bsaleem546/offerdraft-api/pkg/config"
-	"github.com/bsaleem546/offerdraft-api/pkg/response"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
@@ -23,6 +23,10 @@ func main() {
 	authService := auth.NewService(authRepo, cfg)
 	authHandler := auth.NewHandler(authService)
 	authMiddleware := auth.Middleware(cfg.JWTAccessSecret)
+
+	userRepo := user.NewRepository(pool)
+	userService := user.NewService(userRepo)
+	userHandler := user.NewHandler(userService)
 
 	r := chi.NewRouter()
 
@@ -54,9 +58,12 @@ func main() {
 
 	r.Group(func(r chi.Router) {
 		r.Use(authMiddleware)
-		r.Get("/api/v1/me", func(w http.ResponseWriter, r *http.Request) {
-			response.JSON(w, http.StatusOK, map[string]string{"user_id": auth.GetUserID(r)})
-		})
+
+		r.Get("/api/v1/me", userHandler.GetProfile)
+		r.Put("/api/v1/me", userHandler.UpdateProfile)
+		r.Put("/api/v1/me/branding", userHandler.UpdateBranding)
+		r.Put("/api/v1/me/defaults", userHandler.UpdateDefaults)
+		r.Put("/api/v1/me/password", userHandler.ChangePassword)
 	})
 
 	log.Printf("Server starting on port %s", cfg.Port)
