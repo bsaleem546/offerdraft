@@ -20,12 +20,12 @@ func (r *Repository) GetByID(ctx context.Context, userID string) (*ProfileRespon
 	var p ProfileResponse
 	err := r.db.QueryRow(ctx,
 		`SELECT u.id, u.name, u.email, COALESCE(u.agency_name, ''), COALESCE(u.logo_url, ''),
-                COALESCE(u.brand_color, '#AAFF45'), COALESCE(u.pdf_footer_text, ''),
-                COALESCE(u.license_number, ''), COALESCE(u.state, ''),
-                u.email_verified, s.plan, s.status, u.created_at
-                FROM users u
-                LEFT JOIN subscriptions s ON s.user_id = u.id
-                WHERE u.id = $1`,
+  COALESCE(u.brand_color, '#AAFF45'), COALESCE(u.pdf_footer_text, ''),
+  COALESCE(u.license_number, ''), COALESCE(u.state, ''),
+  u.email_verified, s.plan, s.status, u.created_at::text
+  FROM users u
+  LEFT JOIN subscriptions s ON s.user_id = u.id
+  WHERE u.id = $1`,
 		userID,
 	).Scan(&p.ID, &p.Name, &p.Email, &p.AgencyName, &p.LogoURL,
 		&p.BrandColor, &p.PDFFooterText, &p.LicenseNumber, &p.State,

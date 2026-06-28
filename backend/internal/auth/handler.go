@@ -27,7 +27,6 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 		response.Error(w, http.StatusUnprocessableEntity, err.Error())
 		return
 	}
-
 	tokens, err := h.service.Register(r.Context(), req)
 	if err != nil {
 		switch err {
@@ -38,7 +37,6 @@ func (h *Handler) Register(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-
 	response.JSON(w, http.StatusCreated, tokens)
 }
 
@@ -52,13 +50,11 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		response.Error(w, http.StatusUnprocessableEntity, err.Error())
 		return
 	}
-
 	tokens, err := h.service.Login(r.Context(), req)
 	if err != nil {
 		response.Error(w, http.StatusUnauthorized, "invalid email or password")
 		return
 	}
-
 	response.JSON(w, http.StatusOK, tokens)
 }
 
@@ -68,11 +64,45 @@ func (h *Handler) VerifyEmail(w http.ResponseWriter, r *http.Request) {
 		response.Error(w, http.StatusBadRequest, "token is required")
 		return
 	}
-
 	if err := h.service.VerifyEmail(r.Context(), token); err != nil {
 		response.Error(w, http.StatusBadRequest, "invalid or expired token")
 		return
 	}
-
 	response.Message(w, http.StatusOK, "email verified successfully")
+}
+
+func (h *Handler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		Email string `json:"email" validate:"required,email"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		response.Error(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+	if err := h.validate.Struct(body); err != nil {
+		response.Error(w, http.StatusUnprocessableEntity, err.Error())
+		return
+	}
+	h.service.ForgotPassword(r.Context(), body.Email)
+	response.Message(w, http.StatusOK, "if that email exists, a reset link has been sent")
+}
+
+func (h *Handler) ResetPassword(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		Token       string `json:"token" validate:"required"`
+		NewPassword string `json:"new_password" validate:"required,min=8"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		response.Error(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+	if err := h.validate.Struct(body); err != nil {
+		response.Error(w, http.StatusUnprocessableEntity, err.Error())
+		return
+	}
+	if err := h.service.ResetPassword(r.Context(), body.Token, body.NewPassword); err != nil {
+		response.Error(w, http.StatusBadRequest, "invalid or expired token")
+		return
+	}
+	response.Message(w, http.StatusOK, "password reset successfully")
 }

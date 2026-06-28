@@ -2,6 +2,7 @@ package user
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/bsaleem546/offerdraft-api/internal/auth"
@@ -22,6 +23,7 @@ func (h *Handler) GetProfile(w http.ResponseWriter, r *http.Request) {
 	userID := auth.GetUserID(r)
 	profile, err := h.service.GetProfile(r.Context(), userID)
 	if err != nil {
+		log.Printf("GetProfile error: %v", err)
 		response.Error(w, http.StatusInternalServerError, "failed to get profile")
 		return
 	}

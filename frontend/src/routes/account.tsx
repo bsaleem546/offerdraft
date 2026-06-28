@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Lock, Plus, Loader2 } from "lucide-react";
+import { Lock, Plus, Loader2, Eye, EyeOff } from "lucide-react";
 import { AppShell } from "../components/AppShell";
 import { useToast } from "../lib/toast";
 import { user, ApiError, type Profile } from "../lib/api";
@@ -41,6 +41,7 @@ function Account() {
   const [pwForm, setPwForm] = useState({ current: "", next: "", confirm: "" });
   const [pwSaving, setPwSaving] = useState(false);
   const [pwErrors, setPwErrors] = useState<Record<string, string>>({});
+  const [pwShow, setPwShow] = useState({ current: false, next: false, confirm: false });
 
   const [inviting, setInviting] = useState(false);
 
@@ -252,21 +253,32 @@ function Account() {
       {tab === "Password" && (
         <div className="card p-8 max-w-md">
           <div className="space-y-4">
-            <div>
-              <label className="label-xs">Current Password</label>
-              <input type="password" value={pwForm.current} onChange={(e) => setPwForm({ ...pwForm, current: e.target.value })} className="input-base mt-2" style={pwErrors.current_password ? { borderColor: "var(--color-danger)" } : {}} />
-              {pwErrors.current_password && <div className="text-xs text-[var(--color-danger)] mt-1">{pwErrors.current_password}</div>}
-            </div>
-            <div>
-              <label className="label-xs">New Password</label>
-              <input type="password" value={pwForm.next} onChange={(e) => setPwForm({ ...pwForm, next: e.target.value })} className="input-base mt-2" style={pwErrors.new_password ? { borderColor: "var(--color-danger)" } : {}} />
-              {pwErrors.new_password && <div className="text-xs text-[var(--color-danger)] mt-1">{pwErrors.new_password}</div>}
-            </div>
-            <div>
-              <label className="label-xs">Confirm New Password</label>
-              <input type="password" value={pwForm.confirm} onChange={(e) => setPwForm({ ...pwForm, confirm: e.target.value })} className="input-base mt-2" style={pwErrors.confirm ? { borderColor: "var(--color-danger)" } : {}} />
-              {pwErrors.confirm && <div className="text-xs text-[var(--color-danger)] mt-1">{pwErrors.confirm}</div>}
-            </div>
+            {(["current", "next", "confirm"] as const).map((field) => {
+              const labels = { current: "Current Password", next: "New Password", confirm: "Confirm New Password" };
+              const errKey = { current: "current_password", next: "new_password", confirm: "confirm" }[field];
+              return (
+                <div key={field}>
+                  <label className="label-xs">{labels[field]}</label>
+                  <div className="relative mt-2">
+                    <input
+                      type={pwShow[field] ? "text" : "password"}
+                      value={pwForm[field]}
+                      onChange={(e) => setPwForm({ ...pwForm, [field]: e.target.value })}
+                      className="input-base pr-10"
+                      style={pwErrors[errKey] ? { borderColor: "var(--color-danger)" } : {}}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setPwShow({ ...pwShow, [field]: !pwShow[field] })}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-sec)]"
+                    >
+                      {pwShow[field] ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                  {pwErrors[errKey] && <div className="text-xs text-[var(--color-danger)] mt-1">{pwErrors[errKey]}</div>}
+                </div>
+              );
+            })}
             <button onClick={savePassword} disabled={pwSaving} className="btn-primary w-full mt-4">
               {pwSaving ? <Loader2 size={14} className="animate-spin" /> : "Update Password"}
             </button>
