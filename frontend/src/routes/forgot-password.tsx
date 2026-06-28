@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Mail } from "lucide-react";
+import { ArrowLeft, Mail, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AuthShell } from "../components/AuthShell";
+import { auth } from "../lib/api";
 
 export const Route = createFileRoute("/forgot-password")({
   head: () => ({ meta: [{ title: "Reset password — OfferDraft" }] }),
@@ -11,6 +12,7 @@ export const Route = createFileRoute("/forgot-password")({
 function Forgot() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [cooldown, setCooldown] = useState(0);
 
   useEffect(() => {
@@ -21,9 +23,17 @@ function Forgot() {
 
   const send = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("forgot", email);
-    setSent(true);
-    setCooldown(60);
+    setLoading(true);
+    auth.forgotPassword(email)
+      .then(() => { setSent(true); setCooldown(60); })
+      .finally(() => setLoading(false));
+  };
+
+  const resend = () => {
+    setLoading(true);
+    auth.forgotPassword(email)
+      .then(() => setCooldown(60))
+      .finally(() => setLoading(false));
   };
 
   return (
@@ -42,7 +52,9 @@ function Forgot() {
                   <label className="label-xs">Email</label>
                   <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="input-base mt-2" />
                 </div>
-                <button type="submit" className="btn-primary w-full">Send reset link</button>
+                <button type="submit" disabled={loading} className="btn-primary w-full">
+                  {loading ? <Loader2 size={14} className="animate-spin" /> : "Send reset link"}
+                </button>
               </form>
             </>
           ) : (
@@ -50,11 +62,11 @@ function Forgot() {
               <Mail size={40} className="mx-auto text-[var(--color-accent)]" />
               <h2 className="serif text-2xl mt-4">Check your inbox</h2>
               <p className="mt-2 text-sm text-[var(--color-text-sec)]">
-                We sent a link to <strong className="text-[var(--color-text-pri)]">{email}</strong>. It expires in 30 minutes.
+                If <strong className="text-[var(--color-text-pri)]">{email}</strong> exists in our system, a reset link is on its way. It expires in 30 minutes.
               </p>
               <button
-                onClick={() => { console.log("resend"); setCooldown(60); }}
-                disabled={cooldown > 0}
+                onClick={resend}
+                disabled={cooldown > 0 || loading}
                 className="mt-6 text-sm text-[var(--color-accent)] hover:underline disabled:opacity-50 disabled:no-underline disabled:cursor-not-allowed"
               >
                 {cooldown > 0 ? `Resend email in ${cooldown}s` : "Resend email"}

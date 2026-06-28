@@ -116,6 +116,131 @@ export const user = {
     request<string>("/api/v1/me/password", { method: "PUT", body: JSON.stringify(body) }),
 };
 
+export interface Package {
+  id: string;
+  user_id: string;
+  status: string;
+  property_address: string;
+  listing_price: number | null;
+  property_type: string;
+  mls_number: string;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  year_built: number | null;
+  notable_features: string;
+  offer_amount: number;
+  earnest_money: number | null;
+  down_payment_pct: number | null;
+  loan_type: string;
+  closing_date: string;
+  contingencies: string[];
+  escalation_active: boolean;
+  escalation_max_price: number | null;
+  escalation_increment: number | null;
+  additional_terms: string;
+  buyer_name: string;
+  buyer_story: string;
+  cover_letter_text: string;
+  offer_summary_text: string;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PackageList {
+  packages: Package[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface Template {
+  id: string;
+  user_id: string;
+  name: string;
+  loan_type: string;
+  closing_days: number;
+  contingencies: string[];
+  cover_letter_tone: string;
+  default_terms: string;
+  last_used_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+type CreatePackageBody = {
+  property_address: string;
+  offer_amount: number;
+  listing_price?: number;
+  property_type?: string;
+  mls_number?: string;
+  bedrooms?: number;
+  bathrooms?: number;
+  year_built?: number;
+  notable_features?: string;
+  earnest_money?: number;
+  down_payment_pct?: number;
+  loan_type?: string;
+  closing_date?: string;
+  contingencies?: string[];
+  additional_terms?: string;
+  buyer_name?: string;
+  buyer_story?: string;
+};
+
+export const packages = {
+  list: (params?: { status?: string; sort?: string; page?: number; limit?: number }) => {
+    const q = new URLSearchParams();
+    if (params?.status && params.status !== "all") q.set("status", params.status);
+    if (params?.sort) q.set("sort", params.sort);
+    if (params?.page) q.set("page", String(params.page));
+    if (params?.limit) q.set("limit", String(params.limit));
+    const qs = q.toString();
+    return request<PackageList>(`/api/v1/packages${qs ? `?${qs}` : ""}`);
+  },
+
+  getById: (id: string) =>
+    request<Package>(`/api/v1/packages/${id}`),
+
+  create: (body: CreatePackageBody) =>
+    request<Package>("/api/v1/packages", { method: "POST", body: JSON.stringify(body) }),
+
+  update: (id: string, body: Partial<CreatePackageBody>) =>
+    request<Package>(`/api/v1/packages/${id}`, { method: "PUT", body: JSON.stringify(body) }),
+
+  updateCoverLetter: (id: string, text: string) =>
+    request<Package>(`/api/v1/packages/${id}/cover-letter`, { method: "PATCH", body: JSON.stringify({ text }) }),
+
+  markComplete: (id: string) =>
+    request<Package>(`/api/v1/packages/${id}/complete`, { method: "PATCH" }),
+
+  delete: (id: string) =>
+    request<string>(`/api/v1/packages/${id}`, { method: "DELETE" }),
+
+  duplicate: (id: string) =>
+    request<Package>(`/api/v1/packages/${id}/duplicate`, { method: "POST" }),
+
+  generate: (id: string) =>
+    request<Package>(`/api/v1/packages/${id}/generate`, { method: "POST" }),
+};
+
+export const templates = {
+  list: () =>
+    request<Template[]>("/api/v1/templates"),
+
+  getById: (id: string) =>
+    request<Template>(`/api/v1/templates/${id}`),
+
+  create: (body: { name: string; loan_type?: string; closing_days?: number; contingencies?: string[]; cover_letter_tone?: string; default_terms?: string }) =>
+    request<Template>("/api/v1/templates", { method: "POST", body: JSON.stringify(body) }),
+
+  update: (id: string, body: { name?: string; loan_type?: string; closing_days?: number; contingencies?: string[]; cover_letter_tone?: string; default_terms?: string }) =>
+    request<Template>(`/api/v1/templates/${id}`, { method: "PUT", body: JSON.stringify(body) }),
+
+  delete: (id: string) =>
+    request<string>(`/api/v1/templates/${id}`, { method: "DELETE" }),
+};
+
 export const auth = {
   register: async (name: string, email: string, password: string, plan?: string) => {
     const tokens = await request<{ access_token: string; refresh_token: string }>(
@@ -137,6 +262,12 @@ export const auth = {
 
   verifyEmail: (token: string) =>
     request<string>(`/api/v1/auth/verify-email?token=${encodeURIComponent(token)}`),
+
+  forgotPassword: (email: string) =>
+    request<string>("/api/v1/auth/forgot-password", { method: "POST", body: JSON.stringify({ email }) }),
+
+  resetPassword: (token: string, new_password: string) =>
+    request<string>("/api/v1/auth/reset-password", { method: "POST", body: JSON.stringify({ token, new_password }) }),
 
   me: () =>
     request<{ user_id: string }>("/api/v1/me"),
